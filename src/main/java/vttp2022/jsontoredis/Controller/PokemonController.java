@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import vttp2022.jsontoredis.Model.Pokemon;
+import vttp2022.jsontoredis.Repository.PokemonRepository;
 import vttp2022.jsontoredis.Service.PokemonService;
 
 @Controller
@@ -21,6 +22,9 @@ public class PokemonController {
     
     @Autowired
     private PokemonService pkmSvc;
+
+    @Autowired
+    private PokemonRepository pkmRepo;
 
     @Autowired
     @Qualifier("games")
@@ -38,7 +42,7 @@ public class PokemonController {
     public String getPokemonAndSave() 
     {
         //saveToRedis makes a api call to pokeapi
-        pkmSvc.saveToRedis();
+        pkmRepo.saveToRedis();
         return "HomePage";
     }
 
@@ -47,6 +51,9 @@ public class PokemonController {
     @GetMapping(path="/pokemon/{page}")
     public String getPokemonList(@PathVariable String page, Model m) 
     {
+        if (page.equals("0")) {
+            page = "1";
+        }
         List<Pokemon> pkmList = new ArrayList<>();
         //pagination works by parsing in the page to the method
         pkmList = pkmSvc.retrievePokemonList(page);
