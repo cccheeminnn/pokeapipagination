@@ -1,26 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>page <span th:text="${page}"></span></h1>
-    <table border="1">
-        <thead>
-            <tr>
-                <td>Pokemon Name</td>
-                <td>Height</td>
-                <td>Image</td>
-            </tr>
-        </thead>
-        <tr th:each="p: ${pkmList}">
-            <td th:text="${p.name}"></td>
-            <td th:text="${p.height}"></td>
-            <td><img th:src="${p.imageLink}"></td>
-        </tr>
-    </table>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+    </head>
+    <body>
+        <h1>page <span th:text="${page}"></span></h1>
+        <form method="GET" action="/pokemon">
+            <table border="1">
+                <thead>
+                    <tr>
+                        <td>Pokemon Name</td>
+                        <td>Height</td>
+                        <td>Image</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p: ${pkmList}">
+                        <td th:text="${p.name}"></td>
+                        <td th:text="${p.height}"></td>
+                        <td><img th:src="${p.imageLink}"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <button type="submit" 
+                                    th:each="p: ${#numbers.sequence(1, pages)}"
+                                    th:value="${p}"
+                                    th:text="${p}"
+                                    name="pageNumber">
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </form>
+    </body>
 </html>

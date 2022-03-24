@@ -26,42 +26,46 @@ public class PokemonRepository {
 
     public void saveToRedis() 
     {
-        //flushall redis db
-        redisTemplate.delete("pokemons");
-        
-        //apiurl - changing limit changes the number of pokemon to save
-        //offset is like start saving from which index
-        String apiurl = "https://pokeapi.co/api/v2/pokemon/?offset=0&limit=500";
-		RestTemplate template = new RestTemplate();
-		ResponseEntity<String> resp = template.getForEntity(apiurl, String.class);
-        
-		InputStream is = new ByteArrayInputStream(resp.getBody().getBytes());
-		JsonReader r = Json.createReader(is);
-		JsonObject obj = r.readObject();
-        JsonArray array = obj.getJsonArray("results");
-
-        //the apiurl above only have 2 elements, the name and another apiurl
-        //the 2nd apiurl is the one with the details of the pokemon
-		array.stream().map(v -> (JsonObject) v)
-			.forEach((JsonObject v) -> {
-                //2nd apiurl
-                String url = v.getString("url");
-                
-                ResponseEntity<String> resp2 = template.getForEntity(url, String.class);
-                InputStream is2 = new ByteArrayInputStream(resp2.getBody().getBytes());
-                JsonReader r2 = Json.createReader(is2);
-                JsonObject obj2 = r2.readObject();
-                
-                //testing so only take 3 details, name height and imageLink
-                JsonObject pkmJson = Json.createObjectBuilder()
-                    .add("name", obj2.getString("name"))
-                    .add("height", obj2.getInt("height"))
-                    .add("imageLink", obj2.getJsonObject("sprites").getString("front_default"))
-                    .build();
-                System.out.println(pkmJson);
-                //save to a List because List got .range() to retrieve specific element from a index range
-                redisTemplate.opsForList().rightPush("pokemons", pkmJson.toString());
-			});
+        //only save if dont have the key "pokemons"
+        if (!redisTemplate.hasKey("pokemons")) 
+        {
+            //flushall redis db
+            redisTemplate.delete("pokemons");
+            
+            //apiurl - changing limit changes the number of pokemon to save
+            //offset is like start saving from which index
+            String apiurl = "https://pokeapi.co/api/v2/pokemon/?offset=0&limit=50";
+            RestTemplate template = new RestTemplate();
+            ResponseEntity<String> resp = template.getForEntity(apiurl, String.class);
+            
+            InputStream is = new ByteArrayInputStream(resp.getBody().getBytes());
+            JsonReader r = Json.createReader(is);
+            JsonObject obj = r.readObject();
+            JsonArray array = obj.getJsonArray("results");
+    
+            //the apiurl above only have 2 elements, the name and another apiurl
+            //the 2nd apiurl is the one with the details of the pokemon
+            array.stream().map(v -> (JsonObject) v)
+                .forEach((JsonObject v) -> {
+                    //2nd apiurl
+                    String url = v.getString("url");
+                    
+                    ResponseEntity<String> resp2 = template.getForEntity(url, String.class);
+                    InputStream is2 = new ByteArrayInputStream(resp2.getBody().getBytes());
+                    JsonReader r2 = Json.createReader(is2);
+                    JsonObject obj2 = r2.readObject();
+                    
+                    //testing so only take 3 details, name height and imageLink
+                    JsonObject pkmJson = Json.createObjectBuilder()
+                        .add("name", obj2.getString("name"))
+                        .add("height", obj2.getInt("height"))
+                        .add("imageLink", obj2.getJsonObject("sprites").getString("front_default"))
+                        .build();
+                    System.out.println(pkmJson);
+                    //save to a List because List got .range() to retrieve specific element from a index range
+                    redisTemplate.opsForList().rightPush("pokemons", pkmJson.toString());
+                });
+        }
     }
 
     public List<String> retrievePageData(String page) 
@@ -86,6 +90,10 @@ public class PokemonRepository {
                     page1EndIndex+10*(pageInteger-1)); //to
         
         return pkmListString;
+    }
+
+    public String retrieveSize() {
+        return redisTemplate.opsForList().size("pokemons").toString();
     }
 
 }

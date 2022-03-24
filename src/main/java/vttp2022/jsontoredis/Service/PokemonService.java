@@ -50,4 +50,11 @@ public class PokemonService {
 
         return pkmListObj;    
     }
+
+    public Integer getPages() {
+        //ask for the size of our list from redis db
+        String noOfPkmStr = pkmRepo.retrieveSize();
+        Integer noOfPkmInt = Integer.parseInt(noOfPkmStr);
+        return noOfPkmInt;
+    }
 }

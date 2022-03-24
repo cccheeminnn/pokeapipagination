@@ -9,8 +9,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import vttp2022.jsontoredis.Model.Pokemon;
 import vttp2022.jsontoredis.Repository.PokemonRepository;
@@ -38,27 +38,43 @@ public class PokemonController {
     }
 
     //homepage has a save button which goes back to homepage after pressing
-    @GetMapping(path="/save")
-    public String getPokemonAndSave() 
+    @GetMapping(path="/saved")
+    public String getPokemonAndSave(Model m) 
     {
         //saveToRedis makes a api call to pokeapi
         pkmRepo.saveToRedis();
-        return "HomePage";
+
+        List<Pokemon> pkmList = new ArrayList<>();
+        //pagination works by parsing in the page to the method
+        pkmList = pkmSvc.retrievePokemonList("1");
+
+        Integer noOfPkm = pkmSvc.getPages();
+        Integer noOfPages = noOfPkm/10;
+
+        m.addAttribute("page", "1");
+        m.addAttribute("pages", noOfPages);
+        m.addAttribute("pkmList", pkmList);
+
+        return "page";
     }
 
     //http://localhost:8080/pokemon/{page}, manually key in the page lol
     //probably can do some thymeleaf stuff but idk
-    @GetMapping(path="/pokemon/{page}")
-    public String getPokemonList(@PathVariable String page, Model m) 
+    @GetMapping(path="/pokemon")
+    public String getPokemonList(@RequestParam String pageNumber, Model m) 
     {
-        if (page.equals("0")) {
-            page = "1";
+        if (pageNumber.equals("0")) {
+            pageNumber = "1";
         }
         List<Pokemon> pkmList = new ArrayList<>();
         //pagination works by parsing in the page to the method
-        pkmList = pkmSvc.retrievePokemonList(page);
+        pkmList = pkmSvc.retrievePokemonList(pageNumber);
 
-        m.addAttribute("page", page);
+        Integer noOfPkm = pkmSvc.getPages();
+        Integer noOfPages = noOfPkm/10;
+
+        m.addAttribute("page", pageNumber);
+        m.addAttribute("pages", noOfPages);
         m.addAttribute("pkmList", pkmList);
         return "page";
     }
